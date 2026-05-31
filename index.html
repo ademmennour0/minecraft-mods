@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mennour Mods | عالم المودات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- تضمين مكتبات Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --surface-color: rgba(25, 30, 45, 0.7);
+            --primary-color: #00ff88;
+            --primary-glow: rgba(0, 255, 136, 0.4);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --danger: #ff4757;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(0, 255, 136, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(0, 150, 255, 0.05), transparent 25%);
+            background-attachment: fixed;
+            padding-bottom: 50px;
+        }
+
+        header {
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--primary-color), #00b8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .admin-lock {
+            cursor: pointer;
+            font-size: 20px;
+            opacity: 0.5;
+            transition: 0.3s;
+        }
+
+        main {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .hero h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .hero p { color: var(--text-muted); font-size: 14px; }
+
+        .search-container { position: relative; margin-bottom: 30px; }
+
+        .search-container input {
+            width: 100%;
+            padding: 16px 20px;
+            padding-right: 45px;
+            border-radius: 15px;
+            background: var(--surface-color);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            backdrop-filter: blur(5px);
+        }
+
+        .search-container input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .search-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+
+        .mods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .mod-card {
+            background: var(--surface-color);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+        }
+
+        .mod-card::before {
+            content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%;
+            background: var(--primary-color); box-shadow: 0 0 10px var(--primary-color);
+        }
+
+        .mod-id {
+            background: rgba(0, 255, 136, 0.1); color: var(--primary-color);
+            padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700;
+            display: inline-block; margin-bottom: 10px;
+        }
+
+        .mod-name { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+
+        .btn {
+            display: block; width: 100%; padding: 12px; border-radius: 10px;
+            text-align: center; text-decoration: none; font-weight: 700; font-size: 15px; border: none; cursor: pointer;
+        }
+
+        .btn-download { background: linear-gradient(90deg, #00b09b, #96c93d); color: white; }
+
+        .btn-delete { background: rgba(255, 71, 87, 0.1); color: var(--danger); border: 1px solid rgba(255, 71, 87, 0.3); margin-top: 10px; }
+
+        /* الأنظمة العائمة والنوافذ */
+        .fab {
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+            background: var(--primary-color); border-radius: 50%; display: none;
+            justify-content: center; align-items: center; font-size: 30px; color: #000;
+            box-shadow: 0 0 20px var(--primary-glow); cursor: pointer; z-index: 90;
+        }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000;
+            display: none; justify-content: center; align-items: center; padding: 20px;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal-content {
+            background: var(--bg-color); width: 100%; max-width: 400px; padding: 25px;
+            border-radius: 20px; border: 1px solid var(--primary-color);
+        }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .close-btn { color: var(--text-muted); font-size: 24px; cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
+        .form-group input { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; outline: none; }
+
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 300px; }
+        .toast { background: var(--surface-color); border: 1px solid var(--primary-color); color: white; padding: 12px 20px; border-radius: 10px; text-align: center; font-size: 14px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--text-muted); grid-column: 1 / -1; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">MENNOUR MODS</div>
+        <div class="admin-lock" onclick="checkAdmin()">🔒</div>
+    </header>
+
+    <main>
+        <div class="hero">
+            <h1>أفضل مودات وإضافات ماين كرافت</h1>
+            <p>ابحث عن المود برقم الـ ID أو الاسم وحمله مباشرة أونلاين</p>
+        </div>
+
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="search-input" oninput="searchMods()" placeholder="ابحث هنا برقم المود أو الاسم...">
+        </div>
+
+        <div class="mods-grid" id="mods-list">
+            <div class="empty-state">جاري تحميل المودات من السيرفر... ⚡</div>
+        </div>
+    </main>
+
+    <div class="fab" id="add-fab" onclick="toggleModal()">+</div>
+
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>إضافة مود جديد أونلاين</h2>
+                <span class="close-btn" onclick="toggleModal()">&times;</span>
+            </div>
+            <div class="form-group">
+                <label>رقم المود (ID)</label>
+                <input type="number" id="mod-id" placeholder="مثال: 12">
+            </div>
+            <div class="form-group">
+                <label>اسم المود / الإضافة</label>
+                <input type="text" id="mod-name" placeholder="مثال: مود الطيران السريع">
+            </div>
+            <div class="form-group">
+                <label>رابط التحميل</label>
+                <input type="url" id="mod-link" placeholder="https://...">
+            </div>
+            <button class="btn btn-download" onclick="addMod()">نشر المود في السحاب 🚀</button>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        // --- صائد أخطاء الهاتف الذكي ---
+        window.onerror = function(message, source, lineno, colno, error) {
+            alert("حدث خطأ في الكود الداخلي:\n" + message + "\nالسطر: " + lineno);
+            return false;
+        };
+
+        // --- إعدادات الفايربيس ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyCIr8DxLazoCPfazVwVhJaZesu5iMo23ZM",
+          authDomain: "minecraftmods-30f3a.firebaseapp.com",
+          projectId: "minecraftmods-30f3a",
+          storageBucket: "minecraftmods-30f3a.firebasestorage.app",
+          messagingSenderId: "834828692117",
+          appId: "1:834828692117:web:03790359e16e56d9bd499c",
+          measurementId: "G-JE0FHJQ2K7",
+          // إذا كانت قاعدة بياناتك في سيرفر أوروبا، فسيقوم الكود أدناه بالتصحيح تلقائياً إذا واجه مشكلة
+          databaseURL: "https://minecraftmods-30f3a-default-rtdb.firebaseio.com" 
+        };
+
+        // تفعيل الاتصال
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let modsDatabase = [];
+        let isAdmin = false;
+
+        function showToast(message, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.borderColor = isError ? 'var(--danger)' : 'var(--primary-color)';
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3000);
+        }
+
+        function checkAdmin() {
+            if (isAdmin) { showToast("أنت في وضع المدير بالفعل!"); return; }
+            const password = prompt("أدخل كلمة مرور الإدارة المطلوبة للنشر:");
+            if (password === "adem") { 
+                isAdmin = true;
+                document.getElementById('add-fab').style.display = 'flex';
+                document.querySelector('.admin-lock').innerText = '🔓';
+                showToast("تم الدخول بنجاح! يمكنك الآن النشر والحذف.");
+                displayMods(modsDatabase);
+            } else if (password !== null) {
+                showToast("كلمة مرور خاطئة!", true);
+            }
+        }
+
+        function toggleModal() { document.getElementById('add-modal').classList.toggle('active'); }
+
+        // جلب البيانات
+        db.ref('mods').on('value', (snapshot) => {
+            modsDatabase = [];
+            snapshot.forEach((childSnapshot) => {
+                modsDatabase.push({
+                    fbKey: childSnapshot.key,
+                    ...childSnapshot.val()
+                });
+            });
+            modsDatabase.reverse();
+            displayMods(modsDatabase);
+        }, (error) => {
+            alert("خطأ أثناء جلب البيانات من السيرفر:\n" + error.message + "\nتأكد من تفعيل وضع الاختبار (Test Mode) في قواعد الحماية!");
+        });
+
+        function displayMods(modsArray) {
+            const container = document.getElementById('mods-list');
+            container.innerHTML = '';
+
+            if (modsArray.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h2>لا توجد مودات منشورة حالياً 🎮</h2></div>';
+                return;
+            }
+
+            modsArray.forEach((mod) => {
+                const card = document.createElement('div');
+                card.className = 'mod-card';
+                card.innerHTML = `
+                    <span class="mod-id">ID: #${mod.id}</span>
+                    <h3 class="mod-name">${mod.name}</h3>
+                    <a href="${mod.link}" target="_blank" class="btn btn-download">تحميل الان 📥</a>
+                    ${isAdmin ? `<button class="btn btn-delete" onclick="deleteMod('${mod.fbKey}')">حذف المود نهائياً 🗑️</button>` : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addMod() {
+            try {
+                const idVal = document.getElementById('mod-id').value.trim();
+                const nameVal = document.getElementById('mod-name').value.trim();
+                const linkVal = document.getElementById('mod-link').value.trim();
+
+                if (!idVal || !nameVal || !linkVal) { 
+                    showToast("يرجى ملء جميع الخانات!", true); 
+                    return; 
+                }
+
+                if (modsDatabase.some(m => String(m.id) === String(idVal))) { 
+                    showToast("رقم الـ ID هذا مستخدم مسبقاً!", true); 
+                    return; 
+                }
+
+                // محاولة الرفع للسيرفر
+                db.ref('mods').push({ id: idVal, name: nameVal, link: linkVal })
+                .then(() => {
+                    document.getElementById('mod-id').value = '';
+                    document.getElementById('mod-name').value = '';
+                    document.getElementById('mod-link').value = '';
+                    toggleModal();
+                    showToast("تم الحفظ والنشر على الإنترنت! 🎉");
+                })
+                .catch((error) => { 
+                    alert("رفض السيرفر حفظ المود لسبب يتعلق بالحماية أو العنوان:\n" + error.message); 
+                });
+
+            } catch (err) {
+                alert("خطأ محلي في دالة الإضافة:\n" + err.message);
+            }
+        }
+
+        function deleteMod(fbKey) {
+            if (confirm("هل أنت متأكد من حذف هذا المود من السيرفر نهائياً؟")) {
+                db.ref('mods').child(fbKey).remove()
+                .then(() => { showToast("تم الحذف بنجاح!"); })
+                .catch((error) => { alert("فشل الحذف:\n" + error.message); });
+            }
+        }
+
+        function searchMods() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const filtered = modsDatabase.filter(mod => String(mod.id).includes(query) || mod.name.toLowerCase().includes(query));
+            displayMods(filtered);
+        }
+    </script>
+</body>
+</html>
+
