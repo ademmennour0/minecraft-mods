@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mennour Mods | عالم المودات</title>
+    <title>Mod_free_Minecraft</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     
     <!-- تضمين مكتبات Firebase -->
@@ -183,7 +183,8 @@
 <body>
 
     <header>
-        <div class="logo">MENNOUR MODS</div>
+        <!-- اسم الموقع الجديد هنا -->
+        <div class="logo">Mod_free_Minecraft</div>
         <div class="admin-lock" onclick="checkAdmin()">🔒</div>
     </header>
 
@@ -230,13 +231,13 @@
     <div id="toast-container"></div>
 
     <script>
-        // --- صائد أخطاء الهاتف الذكي ---
+        // نظام صائد الأخطاء على الهاتف لإظهار التنبيهات بوضوح
         window.onerror = function(message, source, lineno, colno, error) {
-            alert("حدث خطأ في الكود الداخلي:\n" + message + "\nالسطر: " + lineno);
+            alert("خطأ داخلي:\n" + message + "\nالسطر: " + lineno);
             return false;
         };
 
-        // --- إعدادات الفايربيس ---
+        // إعدادات الفايربيس الخاصة بك
         const firebaseConfig = {
           apiKey: "AIzaSyCIr8DxLazoCPfazVwVhJaZesu5iMo23ZM",
           authDomain: "minecraftmods-30f3a.firebaseapp.com",
@@ -245,11 +246,9 @@
           messagingSenderId: "834828692117",
           appId: "1:834828692117:web:03790359e16e56d9bd499c",
           measurementId: "G-JE0FHJQ2K7",
-          // إذا كانت قاعدة بياناتك في سيرفر أوروبا، فسيقوم الكود أدناه بالتصحيح تلقائياً إذا واجه مشكلة
           databaseURL: "https://minecraftmods-30f3a-default-rtdb.firebaseio.com" 
         };
 
-        // تفعيل الاتصال
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
@@ -268,8 +267,10 @@
 
         function checkAdmin() {
             if (isAdmin) { showToast("أنت في وضع المدير بالفعل!"); return; }
-            const password = prompt("أدخل كلمة مرور الإدارة المطلوبة للنشر:");
-            if (password === "adem") { 
+            const password = prompt("أدخل كلمة مرور الإدارة الجديدة المطلوبة للنشر:");
+            
+            // تم تغيير كلمة السر هنا إلى المطلوب تماماً
+            if (password === "admin24032008") { 
                 isAdmin = true;
                 document.getElementById('add-fab').style.display = 'flex';
                 document.querySelector('.admin-lock').innerText = '🔓';
@@ -282,7 +283,7 @@
 
         function toggleModal() { document.getElementById('add-modal').classList.toggle('active'); }
 
-        // جلب البيانات
+        // جلب البيانات مباشرة من السيرفر
         db.ref('mods').on('value', (snapshot) => {
             modsDatabase = [];
             snapshot.forEach((childSnapshot) => {
@@ -294,7 +295,7 @@
             modsDatabase.reverse();
             displayMods(modsDatabase);
         }, (error) => {
-            alert("خطأ أثناء جلب البيانات من السيرفر:\n" + error.message + "\nتأكد من تفعيل وضع الاختبار (Test Mode) في قواعد الحماية!");
+            alert("خطأ أثناء جلب البيانات:\n" + error.message + "\nتأكد من تفعيل Test Mode في الفايربيس من خانة Rules!");
         });
 
         function displayMods(modsArray) {
@@ -335,7 +336,6 @@
                     return; 
                 }
 
-                // محاولة الرفع للسيرفر
                 db.ref('mods').push({ id: idVal, name: nameVal, link: linkVal })
                 .then(() => {
                     document.getElementById('mod-id').value = '';
@@ -345,7 +345,7 @@
                     showToast("تم الحفظ والنشر على الإنترنت! 🎉");
                 })
                 .catch((error) => { 
-                    alert("رفض السيرفر حفظ المود لسبب يتعلق بالحماية أو العنوان:\n" + error.message); 
+                    alert("رفض السيرفر حفظ المود:\n" + error.message); 
                 });
 
             } catch (err) {
@@ -369,4 +369,3 @@
     </script>
 </body>
 </html>
-
